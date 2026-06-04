@@ -1,6 +1,6 @@
 # Evergine Avalonia Showcase
 
-An automotive configurator sample that embeds a real Evergine 3D scene inside an Avalonia desktop application.
+An automotive configurator sample that embeds an Evergine 3D scene inside an Avalonia desktop application.
 
 Repository: [`jsuarezruiz/evergine-avalonia-showcase`](https://github.com/jsuarezruiz/evergine-avalonia-showcase).
 
