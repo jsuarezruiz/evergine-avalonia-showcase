@@ -23,8 +23,7 @@ The blog also mentions the official Evergine Launcher template and the updated `
 ## Requirements
 
 - .NET SDK capable of building `net10.0`.
-- Windows 10 19041 or newer.
-- Access to the Evergine nightly NuGet feed used in `NuGet.config`.
+- Access to the [Evergine nightly NuGet feed](https://pkgs.dev.azure.com/plainconcepts/Evergine.Nightly/_packaging/Evergine.NightlyBuilds/nuget/v3/index.json) used in `NuGet.config`.
 - DirectX 11 capable Windows environment.
 
 The required Evergine runtime content is checked into `src/Content` and copied
