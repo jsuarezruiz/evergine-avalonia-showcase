@@ -1,0 +1,213 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DesignWidth="1280"
+        d:DesignHeight="720"
+        x:Class="AutomotiveConfigurator.AvaloniaEvergine.MainWindow"
+        Title="Automotive Configurator"
+        Width="1280"
+        Height="720"
+        MinWidth="760"
+        MinHeight="540"
+        Background="#000000">
+  <Window.Resources>
+    <FontFamily x:Key="OriginalDemoFont">avares://AutomotiveConfigurator.AvaloniaEvergine/Assets/Fonts#Lato</FontFamily>
+  </Window.Resources>
+  <Window.Styles>
+    <Style Selector="TextBlock">
+      <Setter Property="FontFamily" Value="{StaticResource OriginalDemoFont}" />
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="FontFamily" Value="{StaticResource OriginalDemoFont}" />
+    </Style>
+  </Window.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto"
+        ClipToBounds="True"
+        Background="#000000">
+    <Grid Height="54"
+          Background="#0B0B0B"
+          ClipToBounds="True">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+
+	    <StackPanel Orientation="Horizontal"
+	                  Spacing="16"
+	                  VerticalAlignment="Center"
+	                  Margin="24,0,16,0"
+                  ClipToBounds="True">
+	        <TextBlock Text="Lamborghini Aventador"
+                   Foreground="#FFFFFF"
+                   FontSize="18"
+                   FontWeight="Light"
+                   VerticalAlignment="Center" />
+	        <TextBlock Text="Evergine + Avalonia"
+	                   Foreground="#777777"
+	                   FontSize="13"
+	                   VerticalAlignment="Center" />
+	        <TextBlock x:Name="StatusTextBlock"
+	                   Text="Renderer active"
+	                   Foreground="#4F8BFF"
+	                   FontSize="12"
+                   TextTrimming="CharacterEllipsis"
+	                   VerticalAlignment="Center" />
+	      </StackPanel>
+
+      <StackPanel x:Name="WelcomeOverlay"
+                  Grid.Column="1"
+                  Orientation="Horizontal"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Margin="12,0"
+                  Spacing="10"
+                  IsVisible="False">
+        <TextBlock Text="Cinematic intro"
+                   Foreground="#CCCCCC"
+                   FontSize="12"
+                   VerticalAlignment="Center" />
+        <Button x:Name="SkipIntroButton"
+                MinWidth="0"
+                MinHeight="0"
+                Padding="16,6"
+                Background="Transparent"
+                BorderBrush="#CCCCCC"
+                BorderThickness="1"
+                CornerRadius="18"
+                Foreground="#CCCCCC"
+                FontSize="13"
+                Content="SKIP INTRO" />
+      </StackPanel>
+
+	      <Border x:Name="AuthoringPanel"
+	              Grid.Column="2"
+	              IsVisible="False"
+	              HorizontalAlignment="Right"
+	              VerticalAlignment="Center"
+	              Margin="0,0,20,0"
+	              Padding="6,4"
+	              CornerRadius="16"
+	              BorderBrush="#D5D5D5"
+	              BorderThickness="1"
+	              Background="#EEEEEE">
+	        <StackPanel Orientation="Horizontal"
+	                    Spacing="8">
+	          <Button x:Name="ShowroomButton"
+	                  Padding="10,2"
+	                  Background="#111111"
+	                  BorderThickness="0"
+	                  CornerRadius="12"
+	                  Foreground="#FFFFFF"
+	                  FontSize="12"
+	                  Content="SHOWROOM" />
+	          <Button x:Name="GitHubButton"
+	                  Padding="0"
+	                  Background="Transparent"
+	                  BorderThickness="0">
+	            <StackPanel Orientation="Horizontal"
+	                        Spacing="4">
+	              <Image Width="18"
+	                     Height="18"
+	                     Source="avares://AutomotiveConfigurator.AvaloniaEvergine/Assets/AutomotiveConfigurator/images/github-mark-32px.png" />
+	              <TextBlock VerticalAlignment="Center"
+	                         FontSize="12"
+	                         Foreground="#333333">
+                  <Run Text="View on " />
+                  <Run Text="GitHub"
+                       FontWeight="Bold" />
+                </TextBlock>
+	            </StackPanel>
+	          </Button>
+	        </StackPanel>
+	      </Border>
+    </Grid>
+
+    <ContentControl x:Name="ViewportHost"
+                    Grid.Row="1" />
+
+	    <Grid x:Name="PalettePanel"
+	          Grid.Row="2"
+	          IsVisible="False"
+	          MinHeight="150"
+	          MaxHeight="210"
+            MaxWidth="960"
+            HorizontalAlignment="Center"
+	          Background="Transparent"
+            Margin="0,0,0,32">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
+
+	      <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+	                    VerticalScrollBarVisibility="Disabled">
+	        <StackPanel x:Name="TabPanel"
+	                    Orientation="Horizontal"
+	                    HorizontalAlignment="Center"
+	                    Margin="0,8,0,0" />
+	      </ScrollViewer>
+
+	      <Border Grid.Row="1"
+	              Background="#BF000000">
+	        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+	                      VerticalScrollBarVisibility="Disabled">
+	          <WrapPanel x:Name="OptionsPanel"
+	                     HorizontalAlignment="Center"
+	                     VerticalAlignment="Center"
+	                     Margin="8" />
+	        </ScrollViewer>
+	      </Border>
+	    </Grid>
+
+    <Grid x:Name="LoaderOverlay"
+          Grid.Row="1"
+          Grid.RowSpan="2"
+          IsVisible="False"
+          Background="#000000">
+      <StackPanel HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Orientation="Vertical"
+                  Spacing="14">
+        <ProgressBar x:Name="LoaderProgress"
+                     Width="32"
+                     Height="32"
+                     IsIndeterminate="True" />
+        <TextBlock x:Name="LoaderTitle"
+                   Text="- LOADING -"
+                   Foreground="#FFFFFF"
+                   FontSize="21"
+                   FontWeight="Light"
+                   TextAlignment="Center" />
+        <TextBlock x:Name="LoaderDescription"
+                   Text="assets/aventador/model.glb"
+                   Foreground="#AAAAAA"
+                   FontSize="14"
+                   FontWeight="Light"
+                   MaxWidth="520"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center" />
+        <Button x:Name="StartDemoButton"
+                IsVisible="False"
+                Padding="24,12"
+                HorizontalAlignment="Center"
+                Background="Transparent"
+                BorderBrush="#CCCCCC"
+                BorderThickness="1"
+                CornerRadius="24"
+                Foreground="#CCCCCC"
+                FontSize="16"
+                Content="START" />
+      </StackPanel>
+    </Grid>
+
+    <Border x:Name="ScreenFader"
+            Grid.RowSpan="3"
+            IsVisible="False"
+            Opacity="0"
+            Background="#000000" />
+  </Grid>
+</Window>

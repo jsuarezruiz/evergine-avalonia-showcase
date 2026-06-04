@@ -1,0 +1,100 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Nullable>enable</Nullable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationId>com.local.automotiveconfigurator.avaloniaevergine</ApplicationId>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <EvergineNightlyVersion>2026.5.9.250-nightly</EvergineNightlyVersion>
+    <GenerateEvergineContent>false</GenerateEvergineContent>
+    <GenerateEvergineAssets>true</GenerateEvergineAssets>
+    <GenerateEvergineScenesCode>false</GenerateEvergineScenesCode>
+    <EvergineProjectFilePath>$(MSBuildProjectDirectory)/AutomotiveConfigurator.AvaloniaEvergine.weproj</EvergineProjectFilePath>
+    <EvergineProfileName>Avalonia</EvergineProfileName>
+    <EvergineAssetContent>$(MSBuildProjectDirectory)/Content</EvergineAssetContent>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.12" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.12" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.12" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.12" />
+    <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="2.88.9" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.93.0" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.12">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Evergine.Avalonia" Version="$(EvergineNightlyVersion)" />
+    <PackageReference Include="Evergine.Common" Version="$(EvergineNightlyVersion)" />
+    <PackageReference Include="Evergine.Components" Version="$(EvergineNightlyVersion)" />
+    <PackageReference Include="Evergine.Framework" Version="$(EvergineNightlyVersion)" />
+    <PackageReference Include="Evergine.Mathematics" Version="$(EvergineNightlyVersion)" />
+    <PackageReference Include="Evergine.Runtimes.GLB" Version="$(EvergineNightlyVersion)" />
+    <PackageReference Include="Evergine.DirectX11" Version="$(EvergineNightlyVersion)" />
+    <PackageReference Include="Evergine.HLSLEverywhere" Version="$(EvergineNightlyVersion)" />
+    <PackageReference Include="Evergine.XAudio2" Version="$(EvergineNightlyVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets/AutomotiveConfigurator/aventador/meta.json" />
+    <AvaloniaResource Include="Assets/AutomotiveConfigurator/aventador/*.png" />
+    <AvaloniaResource Include="Assets/AutomotiveConfigurator/images/*.png" />
+    <AvaloniaResource Include="Assets/Fonts/*.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AutomotiveRuntimeAsset Include="Assets/AutomotiveConfigurator/**/*.glb" />
+    <AutomotiveRuntimeAsset Include="Assets/AutomotiveConfigurator/**/*.exr" />
+    <AutomotiveRuntimeAsset Include="Assets/AutomotiveConfigurator/**/*.json" />
+  </ItemGroup>
+
+  <Target Name="CopyEvergineRuntimeContent"
+          Condition="'$(DesignTimeBuild)' != 'true'"
+          BeforeTargets="BeforeBuild">
+    <PropertyGroup>
+      <EvergineAssetCopyOutput>$(TargetDir)Content</EvergineAssetCopyOutput>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <EvergineContentFiles Include="$(EvergineAssetContent)\**\*" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(EvergineAssetCopyOutput)" />
+    <Copy SourceFiles="@(EvergineContentFiles)"
+          SkipUnchangedFiles="true"
+          DestinationFolder="$(EvergineAssetCopyOutput)\%(RecursiveDir)" />
+    <Copy SourceFiles="@(AutomotiveRuntimeAsset)"
+          SkipUnchangedFiles="true"
+          DestinationFolder="$(EvergineAssetCopyOutput)\Assets\AutomotiveConfigurator\%(RecursiveDir)" />
+  </Target>
+
+  <Target Name="ValidateExportedEvergineRuntimeContent"
+          Condition="'$(DesignTimeBuild)' != 'true'"
+          DependsOnTargets="CopyEvergineRuntimeContent"
+          AfterTargets="CopyEvergineRuntimeContent">
+    <PropertyGroup>
+      <EvergineAssetCopyOutput Condition="'$(EvergineAssetCopyOutput)' == ''">$(TargetDir)Content</EvergineAssetCopyOutput>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <RequiredEvergineRuntimeContent Include="$(EvergineAssetCopyOutput)\daa1f60a-82ad-40fc-8fbb-7b85caa6de0a.wepfx" />
+      <RequiredEvergineRuntimeContent Include="$(EvergineAssetCopyOutput)\dfb5efbf-33e9-4b56-836d-cb8ca4ca0c80.wepfx" />
+      <RequiredEvergineRuntimeContent Include="$(EvergineAssetCopyOutput)\0db59561-b3f5-444f-b5de-e62e3a5b42bf.weprl" />
+      <RequiredEvergineRuntimeContent Include="$(EvergineAssetCopyOutput)\e35c59a9-26ab-4b4c-8210-4b1f21c31530.weprl" />
+      <RequiredEvergineRuntimeContent Include="$(EvergineAssetCopyOutput)\d8cafa87-2b42-4176-9126-caac53f1257a.weprl" />
+      <RequiredEvergineRuntimeContent Include="$(EvergineAssetCopyOutput)\7d1e2792-2031-42bb-a67c-0dbd282be12a.wepsp" />
+      <RequiredEvergineRuntimeContent Include="$(EvergineAssetCopyOutput)\9018edf8-ea96-4721-bf83-5561942432e0.wepsp" />
+      <MissingEvergineRuntimeContent Include="@(RequiredEvergineRuntimeContent)" Condition="!Exists('%(Identity)')" />
+    </ItemGroup>
+
+    <Error Condition="'@(MissingEvergineRuntimeContent)' != ''"
+           Text="Evergine runtime content is missing from the build output. Missing files: @(MissingEvergineRuntimeContent, ', ')" />
+  </Target>
+</Project>

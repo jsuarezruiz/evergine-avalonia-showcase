@@ -1,0 +1,18 @@
+!Evergine.Common.ProjectModel,Evergine.Common
+Packages:
+  - Id: Evergine.Core
+    LocalPath: null
+    Version: 2026.5.9.250-nightly
+Parameters:
+  MaxSkinningWeights: 4
+  SparseMorphTargets: false
+Profiles:
+  - AdditionalEffectTechniqueCombinations: null
+    AlphaCompressionFormat: BC3_UNorm
+    CompileEffects: false
+    GraphicsBackend: DirectX11
+    LauncherType: Avalonia
+    Name: Avalonia
+    NonAlphaCompressionFormat: BC3_UNorm
+    Platform: Windows
+ResourcesPath: Content

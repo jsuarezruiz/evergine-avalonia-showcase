@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);obj/**;obj-evergine/**;obj-evergine-windows/**;obj-evergine-cross/**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <BaseIntermediateOutputPath>obj-evergine-windows\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="!$([MSBuild]::IsOSPlatform('Windows'))">
+    <BaseIntermediateOutputPath>obj-evergine-cross/</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>
