@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -6,30 +7,27 @@ using System.Text.Json;
 using AutomotiveConfigurator.AvaloniaEvergine.Controls;
 using AutomotiveConfigurator.AvaloniaEvergine.Models;
 using AutomotiveConfigurator.AvaloniaEvergine.Rendering;
-using Avalonia;
-using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
-using Rectangle = Avalonia.Controls.Shapes.Rectangle;
 
 namespace AutomotiveConfigurator.AvaloniaEvergine;
 
 public partial class MainWindow : Window
 {
-    private const string WheelDesignSelectionTarget = "__wheel_design";
-    private const double SwatchWidth = 128;
-    private const double SwatchHeight = 81;
+    internal const string WheelDesignSelectionTarget = "__wheel_design";
     private const int MaxCinematicStartAttempts = 10;
-    private static readonly TimeSpan SwatchFadeDuration = TimeSpan.FromMilliseconds(300);
     private static readonly TimeSpan CinematicStartRetryInterval = TimeSpan.FromMilliseconds(100);
     private const string MetaResourceUri =
         "avares://AutomotiveConfigurator.AvaloniaEvergine/Assets/AutomotiveConfigurator/aventador/meta.json";
 
-    private readonly Dictionary<string, Button> tabButtons = new();
+    private readonly ObservableCollection<ConfiguratorTabItem> tabs = new();
+    private readonly ObservableCollection<ConfiguratorOptionItem> options = new();
+    private readonly Dictionary<string, ConfiguratorTabItem> tabItems = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> selectedValues = new(StringComparer.Ordinal);
     private ConfiguratorMeta meta = new();
     private string? activeTabId;
@@ -44,8 +42,6 @@ public partial class MainWindow : Window
     private DispatcherTimer? sceneReadyTimer;
     private int cinematicStartAttemptCount;
 
-    private sealed record SwatchOption(string Target, string Value);
-
     internal bool HasReadyRenderSurface =>
         this.sceneBridge is EvergineRenderHost { IsReady: true };
 
@@ -58,6 +54,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
+        TabItemsControl.ItemsSource = this.tabs;
+        OptionsItemsControl.ItemsSource = this.options;
         AttachRenderSurface();
 
         this.Loaded += (_, _) => InitializeConfigurator();
@@ -272,9 +270,9 @@ public partial class MainWindow : Window
 
     private void BuildTabs()
     {
-        this.tabButtons.Clear();
-        TabPanel.Children.Clear();
-        OptionsPanel.Children.Clear();
+        this.tabItems.Clear();
+        this.tabs.Clear();
+        this.options.Clear();
 
         AddTab("body_colors", "BODY COLOR");
         AddTab("mirror_colors", "SIDE MIRRORS");
@@ -376,32 +374,9 @@ public partial class MainWindow : Window
 
     private void AddTab(string id, string label)
     {
-        var text = new TextBlock
-        {
-            Text = label,
-            Foreground = Brushes.White,
-            FontSize = 13,
-            Margin = new Avalonia.Thickness(4, 0),
-            RenderTransform = new SkewTransform(-20, 0),
-        };
-
-        var button = new Button
-        {
-            Content = text,
-            Tag = id,
-            Padding = new Avalonia.Thickness(16, 8),
-            Background = new SolidColorBrush(Color.FromArgb(190, 0, 0, 0)),
-            BorderThickness = new Avalonia.Thickness(0),
-            CornerRadius = new CornerRadius(0),
-            RenderTransform = new SkewTransform(20, 0),
-        };
-
-        button.Click += (_, _) => ToggleTab(id);
-        button.PointerEntered += (_, _) => SetTabVisual(button, isActive: id == activeTabId, isHover: true);
-        button.PointerExited += (_, _) => SetTabVisual(button, isActive: id == activeTabId, isHover: false);
-
-        this.tabButtons[id] = button;
-        TabPanel.Children.Add(button);
+        var item = new ConfiguratorTabItem(id, label);
+        this.tabItems[id] = item;
+        this.tabs.Add(item);
     }
 
     private void ToggleTab(string id)
@@ -409,7 +384,7 @@ public partial class MainWindow : Window
         if (activeTabId == id)
         {
             activeTabId = null;
-            OptionsPanel.Children.Clear();
+            this.options.Clear();
             UpdateTabStates();
             return;
         }
@@ -420,7 +395,7 @@ public partial class MainWindow : Window
     private void ShowTab(string id)
     {
         activeTabId = id;
-        OptionsPanel.Children.Clear();
+        this.options.Clear();
 
         switch (id)
         {
@@ -460,54 +435,7 @@ public partial class MainWindow : Window
 
     private void AddColorSwatch(string name, Color color, string target, bool setMirrorAsBody)
     {
-        var label = CreateSwatchLabel(name);
-        var layout = CreateColorSwatchContent(color, label);
-        var button = new Button
-        {
-            Width = 128,
-            Height = 81,
-            Margin = new Avalonia.Thickness(12, 16),
-            Padding = new Avalonia.Thickness(0),
-            Background = Brushes.Transparent,
-            BorderBrush = new SolidColorBrush(Color.FromArgb(51, 255, 255, 255)),
-            BorderThickness = new Avalonia.Thickness(1),
-            CornerRadius = new CornerRadius(6),
-            Content = layout,
-            Tag = new SwatchOption(target, ColorKey(color)),
-        };
-        button.Width = SwatchWidth;
-        button.Height = SwatchHeight;
-        button.Margin = new Avalonia.Thickness(12, 16);
-
-        AttachSwatchHover(button, label);
-        button.Click += (_, _) =>
-        {
-            if (target == this.meta.BodyColors.Target)
-            {
-                currentBodyColor = color;
-                this.selectedValues[target] = ColorKey(color);
-            }
-
-            if (target == this.meta.MirrorColors.Target)
-            {
-                mirrorUsesBodyColor = setMirrorAsBody;
-                currentMirrorColor = color;
-                this.selectedValues[target] = ColorKey(color);
-            }
-
-            SceneBridge.SetMaterialColor(target, color);
-
-            if (target == this.meta.BodyColors.Target && mirrorUsesBodyColor)
-            {
-                currentMirrorColor = color;
-                this.selectedValues[this.meta.MirrorColors.Target] = ColorKey(color);
-                SceneBridge.SetMaterialColor(this.meta.MirrorColors.Target, color);
-            }
-
-            UpdateOptionSelection(activeTabId);
-        };
-
-        OptionsPanel.Children.Add(button);
+        this.options.Add(ConfiguratorOptionItem.CreateColor(name, color, target, ColorKey(color), setMirrorAsBody));
     }
 
     private void AddWheelDesignSwatches()
@@ -517,40 +445,96 @@ public partial class MainWindow : Window
             var imageUri = new Uri(
                 $"avares://AutomotiveConfigurator.AvaloniaEvergine/Assets/AutomotiveConfigurator/aventador/{design.Thumb}.png");
             using var stream = AssetLoader.Open(imageUri);
-            var image = new Image
-            {
-                Source = new Bitmap(stream),
-                Stretch = Stretch.UniformToFill,
-            };
+            this.options.Add(ConfiguratorOptionItem.CreateWheelDesign(
+                design.Name,
+                WheelDesignSelectionTarget,
+                design.Value,
+                new Bitmap(stream)));
+        }
+    }
 
-            var label = CreateSwatchLabel(design.Name);
-            var layout = new Grid();
-            layout.Children.Add(image);
-            layout.Children.Add(CreateSwatchGloss());
-            layout.Children.Add(label);
+    private void TabButton_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button { DataContext: ConfiguratorTabItem tab })
+        {
+            ToggleTab(tab.Id);
+        }
+    }
 
-            var button = new Button
-            {
-                Width = SwatchWidth,
-                Height = SwatchHeight,
-                Margin = new Avalonia.Thickness(8, 10),
-                Padding = new Avalonia.Thickness(0),
-                Background = Brushes.Black,
-                BorderBrush = new SolidColorBrush(Color.FromArgb(51, 255, 255, 255)),
-                BorderThickness = new Avalonia.Thickness(1),
-                CornerRadius = new CornerRadius(6),
-                Content = layout,
-                Tag = new SwatchOption(WheelDesignSelectionTarget, design.Value),
-            };
+    private static void TabButton_PointerEntered(object? sender, PointerEventArgs e)
+    {
+        if (sender is Button { DataContext: ConfiguratorTabItem tab })
+        {
+            tab.IsHovered = true;
+        }
+    }
 
-            AttachSwatchHover(button, label);
-            button.Click += (_, _) =>
-            {
-                this.selectedWheelDesign = design.Value;
-                SceneBridge.ShowWheelDesign(design.Value);
-                UpdateOptionSelection(activeTabId);
-            };
-            OptionsPanel.Children.Add(button);
+    private static void TabButton_PointerExited(object? sender, PointerEventArgs e)
+    {
+        if (sender is Button { DataContext: ConfiguratorTabItem tab })
+        {
+            tab.IsHovered = false;
+        }
+    }
+
+    private void OptionButton_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { DataContext: ConfiguratorOptionItem option })
+        {
+            return;
+        }
+
+        if (option.Target == WheelDesignSelectionTarget)
+        {
+            this.selectedWheelDesign = option.Value;
+            SceneBridge.ShowWheelDesign(option.Value);
+            UpdateOptionSelection(activeTabId);
+            return;
+        }
+
+        if (option.SwatchColor is not { } color)
+        {
+            return;
+        }
+
+        if (option.Target == this.meta.BodyColors.Target)
+        {
+            currentBodyColor = color;
+            this.selectedValues[option.Target] = option.Value;
+        }
+
+        if (option.Target == this.meta.MirrorColors.Target)
+        {
+            mirrorUsesBodyColor = option.SetMirrorAsBody;
+            currentMirrorColor = color;
+            this.selectedValues[option.Target] = option.Value;
+        }
+
+        SceneBridge.SetMaterialColor(option.Target, color);
+
+        if (option.Target == this.meta.BodyColors.Target && mirrorUsesBodyColor)
+        {
+            currentMirrorColor = color;
+            this.selectedValues[this.meta.MirrorColors.Target] = option.Value;
+            SceneBridge.SetMaterialColor(this.meta.MirrorColors.Target, color);
+        }
+
+        UpdateOptionSelection(activeTabId);
+    }
+
+    private static void OptionButton_PointerEntered(object? sender, PointerEventArgs e)
+    {
+        if (sender is Button { DataContext: ConfiguratorOptionItem option })
+        {
+            option.IsHovered = true;
+        }
+    }
+
+    private static void OptionButton_PointerExited(object? sender, PointerEventArgs e)
+    {
+        if (sender is Button { DataContext: ConfiguratorOptionItem option })
+        {
+            option.IsHovered = false;
         }
     }
 
@@ -569,124 +553,25 @@ public partial class MainWindow : Window
         ViewportHost.Content = renderSurface;
     }
 
-    private static Grid CreateColorSwatchContent(Color color, Border label)
-    {
-        var layout = new Grid
-        {
-            ClipToBounds = true,
-        };
-
-        layout.Children.Add(new Rectangle
-        {
-            Fill = new SolidColorBrush(color),
-            RadiusX = 6,
-            RadiusY = 6,
-        });
-        layout.Children.Add(CreateSwatchGloss());
-        layout.Children.Add(label);
-        return layout;
-    }
-
-    private static Border CreateSwatchGloss()
-    {
-        return new Border
-        {
-            IsHitTestVisible = false,
-            CornerRadius = new CornerRadius(5),
-            Background = new LinearGradientBrush
-            {
-                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-                EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
-                GradientStops = new GradientStops
-                {
-                    new(Color.FromArgb(128, 255, 255, 255), 0),
-                    new(Color.FromArgb(64, 255, 255, 255), 0.5),
-                    new(Color.FromArgb(128, 255, 255, 255), 0.5),
-                    new(Color.FromArgb(0, 255, 255, 255), 1),
-                },
-            },
-        };
-    }
-
-    private static Border CreateSwatchLabel(string text)
-    {
-        return new Border
-        {
-            Opacity = 0,
-            Background = new SolidColorBrush(Color.FromArgb(64, 0, 0, 0)),
-            Transitions = new Transitions
-            {
-                new DoubleTransition
-                {
-                    Property = Visual.OpacityProperty,
-                    Duration = SwatchFadeDuration,
-                },
-            },
-            Child = new TextBlock
-            {
-                Text = text,
-                Foreground = Brushes.White,
-                FontSize = 14,
-                FontWeight = FontWeight.Light,
-                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                TextAlignment = TextAlignment.Center,
-                TextWrapping = TextWrapping.Wrap,
-            },
-        };
-    }
-
-    private static void AttachSwatchHover(InputElement hitTarget, Border label)
-    {
-        hitTarget.PointerEntered += (_, _) => label.Opacity = 1;
-        hitTarget.PointerExited += (_, _) => label.Opacity = 0;
-    }
-
     private void UpdateTabStates()
     {
-        foreach (var (id, button) in this.tabButtons)
+        foreach (var (id, item) in this.tabItems)
         {
-            SetTabVisual(button, isActive: id == activeTabId, isHover: false);
+            item.IsActive = id == activeTabId;
         }
     }
 
     private void UpdateOptionSelection(string? _)
     {
-        foreach (var child in OptionsPanel.Children)
+        foreach (var option in this.options)
         {
-            if (child is not Button button || button.Tag is not SwatchOption option)
-            {
-                continue;
-            }
-
             var selected = option.Target == WheelDesignSelectionTarget
                 ? string.Equals(option.Value, selectedWheelDesign, StringComparison.Ordinal)
                 : this.selectedValues.TryGetValue(option.Target, out var value) &&
                   string.Equals(value, option.Value, StringComparison.Ordinal);
 
-            SetSwatchSelected(button, selected);
+            option.IsSelected = selected;
         }
-    }
-
-    private static void SetSwatchSelected(Button button, bool selected)
-    {
-        button.BorderBrush = selected
-            ? new SolidColorBrush(Color.FromRgb(255, 255, 255))
-            : new SolidColorBrush(Color.FromArgb(51, 255, 255, 255));
-    }
-
-    private static void SetTabVisual(Button button, bool isActive, bool isHover)
-    {
-        if (button.Content is TextBlock text)
-        {
-            text.Foreground = isActive || isHover ? Brushes.Black : new SolidColorBrush(Color.FromRgb(153, 153, 153));
-        }
-
-        button.Background = isActive
-            ? new SolidColorBrush(Color.FromRgb(204, 204, 204))
-            : isHover
-                ? Brushes.White
-                : new SolidColorBrush(Color.FromArgb(190, 0, 0, 0));
     }
 
     private static Color ParseColor(string value)
