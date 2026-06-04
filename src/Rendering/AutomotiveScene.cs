@@ -421,7 +421,7 @@ public sealed class AutomotiveScene : Scene, IAutomotiveSceneBridge
         this.carEntity = result.CarModel.InstantiateModelHierarchy("Aventador", assetsService);
         this.EnsureRenderableMaterials(this.carEntity);
         this.Managers.EntityManager.Add(this.carEntity);
-        this.ConfigureOrbitFromModel(result.CarModel);
+        this.ConfigureOrbitCamera();
         this.UpdateReflectionProbe();
 
     }
@@ -1027,9 +1027,8 @@ public sealed class AutomotiveScene : Scene, IAutomotiveSceneBridge
         }
     }
 
-    private void ConfigureOrbitFromModel(Model model)
+    private void ConfigureOrbitCamera()
     {
-        _ = model;
         this.orbitTarget = ToVector3(AutomotiveSceneDefaults.OrbitCameraTarget);
         this.orbitDistance = Math.Clamp(this.orbitDistance, OrbitMinDistance, OrbitMaxDistance);
         this.orbitPitch = Math.Clamp(this.orbitPitch, OrbitMinPitch, OrbitMaxPitch);

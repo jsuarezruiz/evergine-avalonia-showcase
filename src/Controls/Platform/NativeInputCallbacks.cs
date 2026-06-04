@@ -2,10 +2,6 @@ using System;
 
 namespace AutomotiveConfigurator.AvaloniaEvergine.Controls.Platform
 {
-    /// <summary>
-    /// Groups all raw-input callbacks that a platform backend invokes
-    /// so <see cref="EvergineRenderHost"/> can dispatch Avalonia events.
-    /// </summary>
     internal sealed class NativeInputCallbacks
     {
         public Action<int, int>? MouseMove { get; init; }

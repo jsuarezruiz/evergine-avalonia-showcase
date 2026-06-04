@@ -16,7 +16,7 @@ That is the architecture used here:
 
 - Avalonia owns the application shell, layout, controls, styling, and interaction flow.
 - Evergine owns the render surface, 3D scene, cameras, lighting, materials, model loading, and real-time visual updates.
-- The bridge between both sides is intentionally small, so UI code can trigger scene operations without depending directly on Evergine implementation details.
+- UI commands flow through a small scene bridge, keeping Avalonia interaction code separate from Evergine scene code.
 
 The blog also mentions the official Evergine Launcher template and the updated `UIWindowSystemsDemo` sample as the starting point for new Avalonia + Evergine projects. This repository builds on that direction with a more complete product-style configurator experience.
 

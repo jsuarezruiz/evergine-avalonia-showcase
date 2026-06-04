@@ -6,11 +6,6 @@ using System.Threading;
 
 namespace AutomotiveConfigurator.AvaloniaEvergine.Controls.Platform
 {
-    /// <summary>
-    /// Windows Win32 implementation of <see cref="INativePlatformBackend"/>.
-    /// Uses a child HWND and stores the backend instance in GWLP_USERDATA to avoid
-    /// dictionary lookups and global locks on the WndProc hot path.
-    /// </summary>
     internal sealed class Win32PlatformBackend : INativePlatformBackend
     {
         private const string WindowClassName = "EvergineRenderWindow";

@@ -16,10 +16,6 @@ using AvaloniaColor = Avalonia.Media.Color;
 
 namespace AutomotiveConfigurator.AvaloniaEvergine.Controls
 {
-    /// <summary>
-    /// App-specific native host that embeds an Evergine rendering surface inside Avalonia.
-    /// It wraps the lower-level Evergine.Avalonia surface/window-system primitives.
-    /// </summary>
     public class EvergineRenderHost : NativeControlHost, IAutomotiveSceneBridge
     {
         private INativePlatformBackend? nativePlatform;
@@ -39,33 +35,17 @@ namespace AutomotiveConfigurator.AvaloniaEvergine.Controls
         private int lastMouseX;
         private int lastMouseY;
 
-        /// <summary>
-        /// Defines the <see cref="DisplayTag"/> styled property, which identifies the Evergine display
-        /// that this control renders into. Defaults to <c>"DefaultDisplay"</c>.
-        /// </summary>
         public static readonly StyledProperty<string> DisplayTagProperty =
             AvaloniaProperty.Register<EvergineRenderHost, string>(nameof(DisplayTag), "DefaultDisplay");
 
-        /// <summary>
-        /// Gets or sets the display tag used to register this control's display with the Evergine
-        /// <see cref="GraphicsPresenter"/>. Must match the <c>DisplayTag</c> set on scene cameras
-        /// that should render into this control.
-        /// </summary>
         public string DisplayTag
         {
             get => this.GetValue(DisplayTagProperty);
             set => this.SetValue(DisplayTagProperty, value);
         }
 
-        /// <summary>
-        /// Gets a value indicating whether the control has fully initialized its display,
-        /// swap chain, and surface and is ready for rendering.
-        /// </summary>
         public bool IsReady { get; private set; }
 
-        /// <summary>
-        /// Initializes a new instance of <see cref="EvergineRenderHost"/> and enables keyboard focus.
-        /// </summary>
         public EvergineRenderHost()
         {
             this.Focusable = true;
@@ -112,10 +92,6 @@ namespace AutomotiveConfigurator.AvaloniaEvergine.Controls
             GetEvergineApplication()?.ZoomCamera(delta);
         }
 
-        /// <inheritdoc/>
-        /// <remarks>
-        /// Creates a native child window to host the Evergine rendering surface.        
-        /// </remarks>
         protected override IPlatformHandle CreateNativeControlCore(IPlatformHandle parent)
         {
             this.nativePlatform = CreatePlatformBackend();
@@ -133,10 +109,6 @@ namespace AutomotiveConfigurator.AvaloniaEvergine.Controls
             return handle;
         }
 
-        /// <inheritdoc/>
-        /// <remarks>
-        /// Unloads Evergine resources and destroys the native Win32 window on Windows.
-        /// </remarks>
         protected override void DestroyNativeControlCore(IPlatformHandle control)
         {
             this.Unload();
@@ -150,11 +122,6 @@ namespace AutomotiveConfigurator.AvaloniaEvergine.Controls
             base.DestroyNativeControlCore(control);
         }
 
-        /// <inheritdoc/>
-        /// <remarks>
-        /// Listens for <see cref="BoundsProperty"/> changes to resize the swap chain surface
-        /// when the control is resized by the Avalonia layout system.
-        /// </remarks>
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
         {
             base.OnPropertyChanged(change);
@@ -165,10 +132,6 @@ namespace AutomotiveConfigurator.AvaloniaEvergine.Controls
             }
         }
 
-        /// <summary>
-        /// Releases all Evergine resources associated with this control, including the display,
-        /// swap chain, surface, and keyboard dispatcher. Safe to call multiple times.
-        /// </summary>
         public void Unload()
         {
             if (this.surface?.KeyboardDispatcher is AvaloniaKeyboardDispatcher keyboardDispatcher)
@@ -228,12 +191,6 @@ namespace AutomotiveConfigurator.AvaloniaEvergine.Controls
             };
         }
 
-        /// <summary>
-        /// Resolves Evergine services from the application container, creates or reuses the
-        /// <see cref="AvaloniaSurface"/>, and on Windows creates the swap chain and display.
-        /// </summary>
-        /// <param name="nativeHandle">The HWND of the child window to render into.</param>
-        /// <param name="surfaceType">The type of surface to create.</param>
         private void InitializeDisplay(IntPtr nativeHandle, SurfaceInfo.SurfaceTypes surfaceType)
         {
             if (nativeHandle == IntPtr.Zero)
@@ -244,13 +201,6 @@ namespace AutomotiveConfigurator.AvaloniaEvergine.Controls
             this.InitializeDisplay(new[] { nativeHandle }, surfaceType);
         }
 
-        /// <summary>
-        /// Initializes the Evergine display infrastructure using one or more native platform handles.
-        /// </summary>
-        /// <param name="nativeHandles">
-        /// The native handles required by the underlying platform.
-        /// </param>
-        /// <param name="surfaceType">The type of surface to create.</param>
         private void InitializeDisplay(IntPtr[] nativeHandles, SurfaceInfo.SurfaceTypes surfaceType)
         {
             if (nativeHandles == null || nativeHandles.Length == 0 || nativeHandles[0] == IntPtr.Zero)
@@ -297,13 +247,6 @@ namespace AutomotiveConfigurator.AvaloniaEvergine.Controls
             this.CreateDisplayWithSwapChain(width, height);
         }
 
-        /// <summary>
-        /// Creates a <see cref="SwapChain"/> targeting the current surface, wraps it in a
-        /// <see cref="Display"/>, registers it with the <see cref="GraphicsPresenter"/>, and
-        /// binds scene cameras whose <c>DisplayTag</c> matches <see cref="DisplayTag"/>.
-        /// </summary>
-        /// <param name="width">The initial swap chain width in pixels.</param>
-        /// <param name="height">The initial swap chain height in pixels.</param>
         private void CreateDisplayWithSwapChain(uint width, uint height)
         {
             if (this.graphicsContext == null || this.surface == null || this.graphicsPresenter == null)
@@ -342,11 +285,6 @@ namespace AutomotiveConfigurator.AvaloniaEvergine.Controls
             this.ConfigureCameras();
         }
 
-        /// <summary>
-        /// Iterates all <see cref="Camera3D"/> components in the current scene and binds any camera
-        /// whose <c>DisplayTag</c> is empty, <c>"DefaultDisplay"</c>, or matches <see cref="DisplayTag"/>
-        /// to this control's registered display tag.
-        /// </summary>
         private void ConfigureCameras()
         {
             if (this.registeredDisplayTag == null)
@@ -385,10 +323,6 @@ namespace AutomotiveConfigurator.AvaloniaEvergine.Controls
             return ((global::AutomotiveConfigurator.AvaloniaEvergine.App?)global::Avalonia.Application.Current)?.EvergineApplication;
         }
 
-        /// <summary>
-        /// Handles layout size changes by updating the surface dimensions and refreshing the
-        /// swap chain's surface info so Evergine presents at the correct resolution.
-        /// </summary>
         private void ResizeSurface()
         {
             if (this.surface == null || this.swapChain == null || this.nativePlatform == null || this.nativePlatform.NativeHandle == IntPtr.Zero)
