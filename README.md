@@ -2,8 +2,6 @@
 
 An automotive configurator sample that embeds an Evergine 3D scene inside an Avalonia desktop application.
 
-Repository: [`jsuarezruiz/evergine-avalonia-showcase`](https://github.com/jsuarezruiz/evergine-avalonia-showcase).
-
 The sample recreates the interaction model from [`rendercodeninja/automotive-configurator`](https://github.com/rendercodeninja/automotive-configurator): a cinematic intro, an orbitable Lamborghini Aventador scene, material customization, wheel selection, and an Avalonia overlay UI driving the 3D renderer.
 
 ![Evergine Avalonia automotive configurator](images/evergine-avalonia-showcase.gif)
@@ -76,10 +74,7 @@ The project targets `net10.0-windows10.0.19041.0` and always builds the Evergine
 - This project follows the architecture described in the official [Evergine + Avalonia announcement](https://evergine.com/es/soporte-avalonia-en-evergine/): Avalonia acts as the main application container while Evergine is embedded as a dedicated 3D render area.
 - `AutomotiveConfigurator.AvaloniaEvergine.weproj` is the minimal Evergine project file used by the build.
 - Checked-in Evergine runtime content from `src/Content` is copied into the output `Content` folder before compilation, and the build validates the required effect/render-layer/sampler files are present.
-- The renderer path uses `net10.0-windows10.0.19041.0`.
 
 ## Credits
 
 This sample is based on the interaction and assets from [`rendercodeninja/automotive-configurator`](https://github.com/rendercodeninja/automotive-configurator).
-
-The upstream repository is MIT licensed, but its README notes that model files were sourced externally and optimized in Blender. Treat the vehicle assets as demo assets until their original license is verified.
